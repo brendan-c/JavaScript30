@@ -1,10 +1,12 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <title>Type Ahead 👀</title>
   <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
 
   <form class="search-form">
@@ -14,9 +16,84 @@
       <li>or a state</li>
     </ul>
   </form>
-<script>
-const endpoint = 'https://gist.githubusercontent.com/Miserlou/c5cd8364bf9b2420bb29/raw/2bf258763cdddd704f8ffd3ea9a3e81d25e2c6f6/cities.json';
+  <script>
+    const debounce = (fn, ms = 0) => {
+      let timeoutId;
+      return function (...args) {
+        clearTimeout(timeoutId);
+        timeoutId = setTimeout(() => fn.apply(this, args), ms);
+      };
+    };
 
-</script>
+    const endpoint =
+      'https://gist.githubusercontent.com/Miserlou/c5cd8364bf9b2420bb29/raw/2bf258763cdddd704f8ffd3ea9a3e81d25e2c6f6/cities.json';
+
+    const dataArr = []
+
+    fetch(endpoint)
+      .then(blob => blob.json())
+      .then(data => dataArr.push(...data))
+
+    function findMatches(itemToMatch, data, props) {
+      if (!itemToMatch) {
+        console.log('empty')
+        return []
+      }
+      const matches = []
+      if (props) {
+        props = typeof props === 'string' ? [props] : props
+      } else {
+        props = Object.keys(data[0])
+      }
+      props.forEach(prop => {
+        const filtered = data.filter(item => {
+          const regex = new RegExp(itemToMatch, 'gi')
+          return item[prop].toString().match(regex)
+        })
+        matches.push(
+          ...filtered
+        )
+      })
+      return matches
+    }
+
+    function numberWithCommas(x) {
+      return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+    }
+
+    function displayMatches(e) {
+      const matchArray = findMatches(e.target.value, dataArr)
+      let html
+      if (!matchArray.length) {
+        html = `
+        <li>Filter for a city</li>
+        <li>or a state</li>
+      `
+      } else if (matchArray.length) {
+        html = matchArray.map(matchedItem => {
+          const regex = RegExp(e.target.value, 'gi')
+          const cityName = matchedItem.city.replace(regex, `<span class="hl">${e.target.value}</span>`)
+          const stateName = matchedItem.state.replace(regex, `<span class="hl">${e.target.value}</span>`)
+          return `
+          <li>
+            <span class="name">${cityName}, ${stateName}</span>
+            <span class="population">${numberWithCommas(matchedItem.population)}</span>
+          </li>
+        `
+
+        }).join('')
+      }
+      suggestions.innerHTML = html
+    }
+
+    const inputSearch = document.querySelector('.search')
+    const suggestions = document.querySelector('.suggestions')
+
+    inputSearch.addEventListener('change', displayMatches)
+    inputSearch.addEventListener('keyup', debounce((e) => {
+      displayMatches(e)
+    }, 300))
+  </script>
 </body>
+
 </html>
