@@ -1,9 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <title>Videos</title>
 </head>
+
 <body>
   <ul class="videos">
     <li data-time="5:43">
@@ -163,10 +165,10 @@
       Video 52
     </li>
     <li data-time="3:44">
-      Video 53
+      3:44
     </li>
     <li data-time="5:05">
-      Video 54
+      5:05
     </li>
     <li data-time="6:03">
       Video 55
@@ -181,7 +183,32 @@
       Video 58
     </li>
   </ul>
-<script>
-</script>
+  <script>
+    const getTotalTime = (selector, dataset = null) => {
+      const totalTimeInSeconds = Array.from(document.querySelectorAll(selector))
+        .map(time => {
+          let splitTime = dataset ?
+            time.dataset[dataset].split(':')
+            .map(x => /[a-z]/gi.test(x) ? 0 : Number(x)) :
+            time.textContent.split(':')
+            .map(x => /[a-z]/gi.test(x) ? 0 : Number(x))
+
+          let [h, m, s] = splitTime.length >= 2 ?
+            splitTime.length === 3 ?
+            splitTime : [0, ...splitTime] : [0, 0, ...splitTime]
+
+          return (h * 360) + (m * 60) + s
+        })
+        .reduce((total, seconds) => total + seconds)
+
+      var h = Math.floor(totalTimeInSeconds / 3600)
+      var m = Math.floor(totalTimeInSeconds % 3600 / 60)
+      var s = Math.floor(totalTimeInSeconds % 3600 % 60)
+
+      return [h, m, s].join(':')
+    }
+    console.log(getTotalTime('.videos li'))
+  </script>
 </body>
+
 </html>
